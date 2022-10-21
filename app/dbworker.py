@@ -45,9 +45,7 @@ GENRE_TRANSLATION_DICT = {"боевики": "action", "драма": "drama", "к
 async def get_genre_movies(genre: str):
     items = []
     for value in MOVIES_DICT.values():
-        print(value)
         for item in value.genres.split(','):
-            print(item.lower(), genre.lower(), GENRE_TRANSLATION_DICT[genre.lower()])
             if item.lower() == GENRE_TRANSLATION_DICT[genre.lower()]:
                 items.append(value)
                 break
@@ -58,7 +56,16 @@ async def get_genre_movies(genre: str):
 
 
 async def get_genre_series(genre: str):
-    pass
+    items = []
+    for value in SERIES_DICT.values():
+        for item in value.genres.split(','):
+            if item.lower() == GENRE_TRANSLATION_DICT[genre.lower()]:
+                items.append(value)
+                break
+    if len(items) == 0:
+        return None
+    else:
+        return choice(items)
 
 
 async def get_top_movies():
@@ -72,6 +79,7 @@ async def get_top_series():
 
 
 async def get_adaptive_movies(user_id: int):
+    # method to
     pass
 
 
@@ -81,23 +89,31 @@ async def get_adaptive_series(user_id: int):
 
 async def get_movie_data(*categories):
     data = None
-    if categories[0] == 'топ':
+    if categories[0] == available_categories[0]:
         data = await get_top_movies()
-    elif categories[0] == 'по жанрам':
+    elif categories[0] == available_categories[1]:
         data = await get_genre_movies(categories[1])
-    elif categories[0] == 'адаптивное':
+    elif categories[0] == available_categories[2]:
         pass
-
-    if categories[0] not in available_categories:
+    else:
         raise Exception('Bad category')
     if data is None:
-        print(data)
         raise Exception('Nothing found in dict')
 
     return data
 
 
 async def get_series_data(*categories):
-    if categories[0] == 'топ':
+    data = None
+    if categories[0] == available_categories[0]:
         data = await get_top_series()
-        return data
+    elif categories[0] == available_categories[1]:
+        data = await get_genre_series(categories[1])
+    elif categories[0] == available_categories[2]:
+        pass
+    else:
+        raise Exception('Bad category')
+    if data is None:
+        raise Exception('Nothing found in dict')
+
+    return data

@@ -85,7 +85,8 @@ async def call_answer(call: types.CallbackQuery, state: FSMContext):
 
     await call.answer()
     user_data = await state.get_data()
-    data = await get_movie_data(user_data['chosen_category'], user_data['chosen_subcategory'])
+    subcategory_data = user_data['chosen_subcategory'] if 'chosen_subcategory' in user_data.keys() else None
+    data = await get_movie_data(user_data['chosen_category'], subcategory_data)
     keyboard, text = create_msg(data)
     await call.bot.send_message(call.from_user.id, text, parse_mode="HTML", reply_markup=keyboard)
 
