@@ -65,7 +65,8 @@ async def subcategory_series_chosen(message: types.Message, state: FSMContext):
 
 
 def create_msg(data: DBEntry):
-    buttons = [[types.InlineKeyboardButton(text="LINK TO TRAILER", url="https://www.imdb.com/title/tt2431438/")],
+    link = f"https://www.imdb.com/title/{data.tconst}/"
+    buttons = [[types.InlineKeyboardButton(text="LINK TO TRAILER", url=link)],
                [types.InlineKeyboardButton(text="❤", callback_data="like"),
                 types.InlineKeyboardButton(text="👎", callback_data="dislike")
                 ]
