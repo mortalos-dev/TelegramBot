@@ -1,0 +1,9 @@
+# created by virtualenv automatically
+
+TelegramBot\config\*
+TelegramBot\buttons.py
+TelegramBot\keyboards.py
+TelegramBot\main.py
+TelegramBot\messages.py
+TelegramBot\utils.py
+
