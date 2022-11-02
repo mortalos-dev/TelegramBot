@@ -65,14 +65,14 @@ async def get_genre_movies(genre: str):
         WHERE
             genres.genre = ?
         ORDER BY
-            averageRating DESC
+            RANDOM()
+        LIMIT 1
         ;
         '''
 
     with sql_connection(PATH_DB) as con:
         data = execute_read_query_args(con, select_query, [GENRE_TRANSLATION_DICT[genre.lower()]])
-        item = choice(data)
-        film_data = DBEntry(*item)
+        film_data = DBEntry(*data[0])
         return film_data
 
 
@@ -102,14 +102,14 @@ async def get_genre_series(genre: str):
         WHERE 
             genres.genre = ?
         ORDER BY
-            averageRating DESC
+            RANDOM()
+        LIMIT 1
         ;
         '''
 
     with sql_connection(PATH_DB) as con:
         data = execute_read_query_args(con, select_query, [GENRE_TRANSLATION_DICT[genre.lower()]])
-        item = choice(data)
-        film_data = DBEntry(*item)
+        film_data = DBEntry(*data[0])
         return film_data
 
 
@@ -133,14 +133,15 @@ async def get_top_movies():
             FROM 
                 movies
             ORDER BY
-                averageRating DESC
+                RANDOM()
+            LIMIT 1
             ;
             '''
 
     with sql_connection(PATH_DB) as con:
         data = execute_read_query(con, select_query)
-        item = choice(data)
-        film_data = DBEntry(*item)
+        # item = choice(data)
+        film_data = DBEntry(*data[0])
         return film_data
 
 
@@ -164,19 +165,19 @@ async def get_top_series():
         FROM 
             series
         ORDER BY
-            averageRating DESC
+            RANDOM()
+        LIMIT 1
         ;
         '''
 
     with sql_connection(PATH_DB) as con:
         data = execute_read_query(con, select_query)
-        item = choice(data)
-        film_data = DBEntry(*item)
+        # item = choice(data)
+        film_data = DBEntry(*data[0])
         return film_data
 
 
 async def get_adaptive_movies(user_id: int):
-    # method to
     pass
 
 

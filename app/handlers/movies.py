@@ -65,7 +65,8 @@ async def subcategory_movies_chosen(message: types.Message, state: FSMContext):
 
 
 def create_msg(data: DBEntry):
-    buttons = [[types.InlineKeyboardButton(text="LINK TO TRAILER", url=data.trailerLink)],
+    link = data.trailerLink if data.trailerLink else f"https://www.imdb.com/title/{data.tconst}/"
+    buttons = [[types.InlineKeyboardButton(text="LINK TO TRAILER", url=link)],
                [types.InlineKeyboardButton(text="❤", callback_data="like"),
                 types.InlineKeyboardButton(text="👎", callback_data="dislike")
                 ]
@@ -95,7 +96,10 @@ async def call_answer(call: types.CallbackQuery, state: FSMContext):
     subcategory_data = user_data['chosen_subcategory'] if 'chosen_subcategory' in user_data.keys() else None
     data = await get_movie_data(user_data['chosen_category'], subcategory_data)
     keyboard, text = create_msg(data)
-    await call.bot.send_message(call.from_user.id, text, parse_mode="HTML", reply_markup=keyboard)
+    try:
+        await call.bot.send_message(call.from_user.id, text, parse_mode="HTML", reply_markup=keyboard)
+    except BaseException as e:
+        print(f"The error '{e}' occurred in keyboard - {keyboard} {data.tconst} {type(data.trailerLink)}")
 
 
 async def echo_message(message: types.Message):
