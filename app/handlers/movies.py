@@ -34,7 +34,7 @@ async def category_movies_chosen(message: types.Message, state: FSMContext):
         await message.answer(f"Вы выбрали категорию фильмов: {message.text.lower()}.\n"
                              f"Теперь приступим к просмотру вариантов :-)",
                              reply_markup=types.ReplyKeyboardRemove())
-        data = await get_movie_data(message.text.lower())
+        data = get_movie_data(message.text.lower())
         keyboard, text = create_msg(data)
         await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
 
@@ -56,7 +56,7 @@ async def subcategory_movies_chosen(message: types.Message, state: FSMContext):
                          f"Теперь приступим к просмотру вариантов :-)",
                          reply_markup=types.ReplyKeyboardRemove())
 
-    data = await get_movie_data(user_data['chosen_category'], message.text.lower())
+    data = get_movie_data(user_data['chosen_category'], message.text.lower())
     keyboard, text = create_msg(data)
     await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
 
@@ -65,8 +65,7 @@ async def subcategory_movies_chosen(message: types.Message, state: FSMContext):
 
 
 def create_msg(data: DBEntry):
-    link = f"https://www.imdb.com/title/{data.tconst}/"
-    buttons = [[types.InlineKeyboardButton(text="LINK TO TRAILER", url=link)],
+    buttons = [[types.InlineKeyboardButton(text="LINK TO TRAILER", url=data.trailerLink)],
                [types.InlineKeyboardButton(text="❤", callback_data="like"),
                 types.InlineKeyboardButton(text="👎", callback_data="dislike")
                 ]
@@ -74,9 +73,16 @@ def create_msg(data: DBEntry):
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
     text = fmt.text(
-        fmt.text(fmt.hunderline(data.primaryTitle), " (", data.startYear, " - ", data.endYear, ")"),
-        fmt.text(fmt.code(data.description)),
+        fmt.text(fmt.hide_link(data.picLink),
+                 fmt.hbold(data.primaryTitle), " (", data.startYear, ")"),
+        fmt.text(fmt.hitalic(data.originalTitle)),
         fmt.text(f"{'Для взрослых' if data.isAdult == True else 'Для всей семьи'}"),
+        fmt.text(fmt.hitalic(data.runtimeMinutes), ' минут'),
+        fmt.text(' '),
+        fmt.text(data.description),
+        fmt.text(' '),
+        fmt.text(fmt.hbold('В ролях: '), data.actors),
+        fmt.text(fmt.hbold('Режиссер: '), data.directors),
         sep="\n"
     )
     return keyboard, text
@@ -87,7 +93,7 @@ async def call_answer(call: types.CallbackQuery, state: FSMContext):
     await call.answer()
     user_data = await state.get_data()
     subcategory_data = user_data['chosen_subcategory'] if 'chosen_subcategory' in user_data.keys() else None
-    data = await get_movie_data(user_data['chosen_category'], subcategory_data)
+    data = get_movie_data(user_data['chosen_category'], subcategory_data)
     keyboard, text = create_msg(data)
     await call.bot.send_message(call.from_user.id, text, parse_mode="HTML", reply_markup=keyboard)
 
