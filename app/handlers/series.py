@@ -65,8 +65,7 @@ async def subcategory_series_chosen(message: types.Message, state: FSMContext):
 
 
 def create_msg(data: DBEntry):
-    link = f"https://www.imdb.com/title/{data.tconst}/"
-    buttons = [[types.InlineKeyboardButton(text="LINK TO TRAILER", url=link)],
+    buttons = [[types.InlineKeyboardButton(text="LINK TO TRAILER", url=data.trailerLink)],
                [types.InlineKeyboardButton(text="❤", callback_data="like"),
                 types.InlineKeyboardButton(text="👎", callback_data="dislike")
                 ]
@@ -74,9 +73,16 @@ def create_msg(data: DBEntry):
     keyboard = types.InlineKeyboardMarkup(inline_keyboard=buttons)
 
     text = fmt.text(
-        fmt.text(fmt.hunderline(data.primaryTitle), " (", data.startYear, " - ", data.endYear, ")"),
-        fmt.text(fmt.code(data.description)),
-        fmt.text(f"{'Для взрослых' if data.isAdult == True else 'Для всей семьи'}"),
+        fmt.text(fmt.hide_link(data.picLink),
+                 fmt.hbold(data.primaryTitle), " (", data.startYear, " - ", data.endYear, ") Рейтинг IMDB - ", data.imdbRating),
+        fmt.text(fmt.hitalic(data.originalTitle)),
+        fmt.text('Длительность серии ', fmt.hitalic(data.runtimeMinutes), ' минут'),
+        fmt.text(' '),
+        fmt.text(data.description),
+        fmt.text(' '),
+        fmt.text(fmt.hbold('Жанр: '), data.genres),
+        fmt.text(fmt.hbold('В ролях: '), data.actors),
+        fmt.text(fmt.hbold('Режиссер: '), data.directors),
         sep="\n"
     )
     return keyboard, text
@@ -101,3 +107,4 @@ def register_handlers_series(dp: Dispatcher):
     dp.register_message_handler(subcategory_series_chosen, state=ChooseSeriesState.waiting_for_subcategory)
     dp.register_callback_query_handler(call_answer, text='like', state=ChooseSeriesState.exploring_state)
     dp.register_callback_query_handler(call_answer, text='dislike', state=ChooseSeriesState.exploring_state)
+

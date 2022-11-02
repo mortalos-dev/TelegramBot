@@ -34,41 +34,86 @@ class DBEntry:
     runtimeMinutes: int
 
 
-GENRE_TRANSLATION_DICT = {"боевики": "action", "драма": "drama", "комедия": "comedy",
-                          "триллер": "Thriller", "ужасы": "Horror", "приключения": "adventure"
-
-}
+GENRE_TRANSLATION_DICT = {"боевики": "Action", "драма": "Drama", "комедия": "Comedy",
+                          "триллер": "Thriller", "ужасы": "Horror", "приключения": "Adventure"
+                          }
 
 
 async def get_genre_movies(genre: str):
-    pass
-    # items = []
-    # for value in MOVIES_DICT.values():
-    #     for item in value.genres.split(','):
-    #         if item.lower() == GENRE_TRANSLATION_DICT[genre.lower()]:
-    #             items.append(value)
-    #             break
-    # if len(items) == 0:
-    #     return None
-    # else:
-    #     return choice(items)
+    select_query = '''
+        SELECT DISTINCT
+            movies.tconst, 
+            movies.primaryTitle, 
+            movies.originalTitle,
+            movies.description,
+            movies.isAdult,
+            movies.startYear,
+            movies.endYear,
+            movies.genres,
+            movies.linkToPic,
+            movies.linkToTrailer,
+            movies.averageRating,
+            movies.actors,
+            movies.directors,
+            movies.runtimeMinutes
+        FROM
+            movies
+        INNER JOIN
+            genres 
+        ON
+            movies.tconst = genres.tconst
+        WHERE
+            genres.genre = ?
+        ORDER BY
+            averageRating DESC
+        ;
+        '''
+
+    with sql_connection(PATH_DB) as con:
+        data = execute_read_query_args(con, select_query, [GENRE_TRANSLATION_DICT[genre.lower()]])
+        item = choice(data)
+        film_data = DBEntry(*item)
+        return film_data
 
 
 async def get_genre_series(genre: str):
-    pass
-    # items = []
-    # for value in SERIES_DICT.values():
-    #     for item in value.genres.split(','):
-    #         if item.lower() == GENRE_TRANSLATION_DICT[genre.lower()]:
-    #             items.append(value)
-    #             break
-    # if len(items) == 0:
-    #     return None
-    # else:
-    #     return choice(items)
+    select_query = '''
+        SELECT DISTINCT 
+            series.tconst, 
+            series.primaryTitle, 
+            series.originalTitle,
+            series.description,
+            series.isAdult,
+            series.startYear,
+            series.endYear,
+            series.genres,
+            series.linkToPic,
+            series.linkToTrailer,
+            series.averageRating,
+            series.actors,
+            series.directors,
+            series.runtimeMinutes
+        FROM 
+            series
+        INNER JOIN 
+            genres 
+        ON 
+            series.tconst = genres.tconst
+        WHERE 
+            genres.genre = ?
+        ORDER BY
+            averageRating DESC
+        ;
+        '''
+
+    with sql_connection(PATH_DB) as con:
+        data = execute_read_query_args(con, select_query, [GENRE_TRANSLATION_DICT[genre.lower()]])
+        item = choice(data)
+        film_data = DBEntry(*item)
+        return film_data
 
 
-def get_top_movies():
+async def get_top_movies():
     select_query = '''
             SELECT DISTINCT 
                 tconst, 
@@ -100,7 +145,34 @@ def get_top_movies():
 
 
 async def get_top_series():
-    pass
+    select_query = '''
+        SELECT DISTINCT 
+            tconst, 
+            primaryTitle, 
+            originalTitle,
+            description,
+            isAdult,
+            startYear,
+            endYear,
+            genres,
+            linkToPic,
+            linkToTrailer,
+            averageRating,
+            actors,
+            directors,
+            runtimeMinutes
+        FROM 
+            series
+        ORDER BY
+            averageRating DESC
+        ;
+        '''
+
+    with sql_connection(PATH_DB) as con:
+        data = execute_read_query(con, select_query)
+        item = choice(data)
+        film_data = DBEntry(*item)
+        return film_data
 
 
 async def get_adaptive_movies(user_id: int):
@@ -112,12 +184,12 @@ async def get_adaptive_series(user_id: int):
     pass
 
 
-def get_movie_data(*categories):
+async def get_movie_data(*categories):
     data = None
     if categories[0] == available_categories[0]:
-        data = get_top_movies()
+        data = await get_top_movies()
     elif categories[0] == available_categories[1]:
-        data = get_genre_movies(categories[1])
+        data = await get_genre_movies(categories[1])
     elif categories[0] == available_categories[2]:
         pass
     else:
@@ -185,6 +257,17 @@ def execute_read_query(connection, query):
     result = None
     try:
         cursor.execute(query)
+        result = cursor.fetchall()
+        return result
+    except BaseException as e:
+        print(f"The error '{e}' while read sql occurred")
+
+
+def execute_read_query_args(connection, query, args):
+    cursor = connection.cursor()
+    result = None
+    try:
+        cursor.execute(query, args)
         result = cursor.fetchall()
         return result
     except BaseException as e:

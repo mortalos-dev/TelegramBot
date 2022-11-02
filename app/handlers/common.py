@@ -6,7 +6,7 @@ from aiogram.dispatcher.filters import Text, IDFilter
 async def cmd_start(message: types.Message, state: FSMContext):
     await state.finish()
     await message.answer(
-        "Выберите, категорию поиска медиа: фильмы (/movies), сериалы (/series) или мультфильмы (/cartoons).",
+        "Выберите, категорию поиска медиа: фильмы (/movies), сериалы (/series).",
         reply_markup=types.ReplyKeyboardRemove()
     )
 
