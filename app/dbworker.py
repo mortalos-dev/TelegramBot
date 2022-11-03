@@ -116,28 +116,28 @@ async def get_genre_series(genre: str):
 
 async def get_top_movies():
     select_query = '''
-            SELECT DISTINCT 
-                tconst, 
-                primaryTitle, 
-                originalTitle,
-                description,
-                isAdult,
-                startYear,
-                endYear,
-                genres,
-                linkToPic,
-                linkToTrailer,
-                averageRating,
-                actors,
-                directors,
-                runtimeMinutes
-            FROM 
-                movies
-            ORDER BY
-                RANDOM()
-            LIMIT 1
-            ;
-            '''
+        SELECT DISTINCT 
+            tconst, 
+            primaryTitle, 
+            originalTitle,
+            description,
+            isAdult,
+            startYear,
+            endYear,
+            genres,
+            linkToPic,
+            linkToTrailer,
+            averageRating,
+            actors,
+            directors,
+            runtimeMinutes
+        FROM 
+            movies
+        ORDER BY
+            RANDOM()
+        LIMIT 1
+        ;
+        '''
 
     with sql_connection(PATH_DB) as con:
         data = execute_read_query(con, select_query)
@@ -233,15 +233,17 @@ async def user_data_update(user_id: int, tconst: str, like: int):
     '''
     add_user_query = '''
         INSERT INTO users
-            userid = ?
+            (userid)
+        VALUES
+            (?)
         ;
     '''
     args = (user_id, tconst, like)
     with sql_connection(USERS_DB) as con:
         users_raw = execute_read_query(con, check_query)
-        users = (item[0] for item in users_raw)
+        users = [item[0] for item in users_raw]
         if user_id not in users:
-            await execute_query_with_agrs(con, write_query, user_id)
+            await execute_query_with_agrs(con, add_user_query, [user_id])
         await execute_query_with_agrs(con, write_query, args)
 
 
@@ -312,5 +314,4 @@ def execute_read_query_many(connection, query):
         return result
     except BaseException as e:
         print(f"The error '{e}' while read sql occurred")
-
 
