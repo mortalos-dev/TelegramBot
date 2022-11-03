@@ -12,6 +12,7 @@ available_genres = ["боевики", "драма", "комедия", "трил�
 
 dirname = os.path.dirname(__file__)
 PATH_DB = os.path.join(dirname, 'db\MoviesSeriesGenres.db')
+USERS_DB = os.path.join(dirname, 'db\BotUsersDB.db')
 FETCH_SIZE = 100
 
 
@@ -172,7 +173,6 @@ async def get_top_series():
 
     with sql_connection(PATH_DB) as con:
         data = execute_read_query(con, select_query)
-        # item = choice(data)
         film_data = DBEntry(*data[0])
         return film_data
 
@@ -215,6 +215,34 @@ async def get_series_data(*categories):
         raise Exception('Nothing found in dict')
 
     return data
+
+
+async def user_data_update(user_id: int, tconst: str, like: int):
+    write_query = '''
+        INSERT INTO watches 
+            (userid, tconst, choose) 
+        VALUES 
+            (?, ?, ?);
+        '''
+    check_query = '''
+        SELECT DISTINCT
+            userid
+        FROM 
+            users
+        ;
+    '''
+    add_user_query = '''
+        INSERT INTO users
+            userid = ?
+        ;
+    '''
+    args = (user_id, tconst, like)
+    with sql_connection(USERS_DB) as con:
+        users_raw = execute_read_query(con, check_query)
+        users = (item[0] for item in users_raw)
+        if user_id not in users:
+            await execute_query_with_agrs(con, write_query, user_id)
+        await execute_query_with_agrs(con, write_query, args)
 
 
 def sql_connection(file_name):

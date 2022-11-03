@@ -1,7 +1,7 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from ..dbworker import get_movie_data, DBEntry
+from ..dbworker import get_movie_data, DBEntry, user_data_update
 import aiogram.utils.markdown as fmt
 
 
@@ -37,7 +37,7 @@ async def category_movies_chosen(message: types.Message, state: FSMContext):
         data = await get_movie_data(message.text.lower())
         keyboard, text = create_msg(data)
         await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
-
+        await state.update_data(chosen_category=message.text.lower(), tconst=data.tconst)
         await state.set_state(ChooseMovieState.exploring_state.state)
     else:
         keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -60,7 +60,7 @@ async def subcategory_movies_chosen(message: types.Message, state: FSMContext):
     keyboard, text = create_msg(data)
     await message.answer(text, parse_mode="HTML", reply_markup=keyboard)
 
-    await state.update_data(chosen_subcategory=message.text.lower(), chosen_category=user_data['chosen_category'])
+    await state.update_data(chosen_subcategory=message.text.lower(), chosen_category=user_data['chosen_category'], tconst=data.tconst)
     await state.set_state(ChooseMovieState.exploring_state.state)
 
 
@@ -90,16 +90,15 @@ def create_msg(data: DBEntry):
 
 
 async def call_answer(call: types.CallbackQuery, state: FSMContext):
-
     await call.answer()
     user_data = await state.get_data()
+    user_id = call.from_user.id
     subcategory_data = user_data['chosen_subcategory'] if 'chosen_subcategory' in user_data.keys() else None
     data = await get_movie_data(user_data['chosen_category'], subcategory_data)
+    like_data = 1 if call['data'] == 'like' else 0
+    await user_data_update(user_id, data.tconst, like_data)
     keyboard, text = create_msg(data)
-    try:
-        await call.bot.send_message(call.from_user.id, text, parse_mode="HTML", reply_markup=keyboard)
-    except BaseException as e:
-        print(f"The error '{e}' occurred in keyboard - {keyboard} {data.tconst} {type(data.trailerLink)}")
+    await call.bot.send_message(call.from_user.id, text, parse_mode="HTML", reply_markup=keyboard)
 
 
 async def echo_message(message: types.Message):
@@ -112,3 +111,4 @@ def register_handlers_movies(dp: Dispatcher):
     dp.register_message_handler(subcategory_movies_chosen, state=ChooseMovieState.waiting_for_subcategory)
     dp.register_callback_query_handler(call_answer, text='like', state=ChooseMovieState.exploring_state)
     dp.register_callback_query_handler(call_answer, text='dislike', state=ChooseMovieState.exploring_state)
+
